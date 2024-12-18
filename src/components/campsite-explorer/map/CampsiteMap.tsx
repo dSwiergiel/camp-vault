@@ -7,7 +7,8 @@ import "leaflet/dist/leaflet.css";
 import { useUserCoordinates } from "@/lib/hooks/useUserCoordinates";
 import { renderToStaticMarkup } from "react-dom/server";
 import UserLocationMarker from "./map-markers/UserLocationMarker";
-
+import { Skeleton } from "@/components/ui/skeleton";
+import { DEFAULT_CENTER, DEFAULT_ZOOM } from "@/lib/constants";
 // dynamically import all components since leaflet needs to be loaded in the browser
 const MapContainer = dynamic(
   () => import("react-leaflet").then((mod) => mod.MapContainer),
@@ -31,9 +32,6 @@ const ZoomControls = dynamic(() => import("./zoom-controls/ZoomControls"), {
   ssr: false,
 });
 
-const DEFAULT_CENTER: LatLngExpression = [43.371122, -74.730233];
-const DEFAULT_ZOOM = 15;
-
 // define your campsite interface
 interface Campsite {
   id: string;
@@ -51,7 +49,12 @@ export default function CampsiteMap() {
   const [isMounted, setIsMounted] = useState(false);
   const [icon, setIcon] = useState<Icon | undefined>(undefined);
   const [userIcon, setUserIcon] = useState<DivIcon | undefined>(undefined);
-  const { latitude, longitude } = useUserCoordinates();
+  const { latitude: userLatitude, longitude: userLongitude } =
+    useUserCoordinates();
+
+  // Add loading state that only checks for mounting and icon loading
+  // We don't wait for coordinates since they're optional
+  const isLoading = !isMounted || !icon || !userIcon;
 
   useEffect(() => {
     import("leaflet").then(({ Icon, DivIcon }) => {
@@ -85,14 +88,22 @@ export default function CampsiteMap() {
     });
   }, []);
 
-  if (!isMounted) {
-    return <div className="container mx-auto h-full">Loading map...</div>;
+  if (isLoading) {
+    return (
+      <div className="container mx-auto h-[calc(100vh-4rem)]">
+        <Skeleton className="h-[calc(100vh-14.5rem)] w-full rounded-lg bg-muted" />
+      </div>
+    );
   }
 
   return (
     <div className="container mx-auto h-[calc(100vh-4rem)]">
       <MapContainer
-        center={DEFAULT_CENTER as LatLngExpression}
+        center={
+          userLatitude && userLongitude
+            ? [userLatitude, userLongitude]
+            : DEFAULT_CENTER
+        }
         zoom={DEFAULT_ZOOM}
         className="w-full h-[calc(100vh-14.5rem)] z-0 rounded-sm"
         zoomControl={false}
@@ -106,9 +117,9 @@ export default function CampsiteMap() {
         <LayerControls />
 
         {/* user location marker */}
-        {latitude && longitude && userIcon && (
+        {userLatitude && userLongitude && userIcon && (
           <Marker
-            position={[latitude, longitude]}
+            position={[userLatitude, userLongitude]}
             icon={userIcon}
             title="Your location"
           >

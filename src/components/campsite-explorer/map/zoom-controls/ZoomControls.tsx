@@ -5,17 +5,19 @@ import { Button } from "@/components/ui/button";
 import { LocateFixed, Minus, Plus } from "lucide-react";
 import { useMap } from "react-leaflet";
 import { useUserCoordinates } from "@/lib/hooks/useUserCoordinates";
+import { DEFAULT_ZOOM } from "@/lib/constants";
 
 export default function ZoomControls() {
   const map = useMap();
-  const { latitude, longitude } = useUserCoordinates();
+  const { latitude: userLatitude, longitude: userLongitude } =
+    useUserCoordinates();
 
-  // Automatically center map on user's location when coordinates become available
+  // automatically center map on user's location when coordinates become available
   useEffect(() => {
-    if (latitude && longitude) {
-      map.setView([latitude, longitude], 12);
+    if (userLatitude && userLongitude) {
+      map.setView([userLatitude, userLongitude], DEFAULT_ZOOM);
     }
-  }, [latitude, longitude, map]);
+  }, [userLatitude, userLongitude, map]);
 
   const handleZoomIn = () => {
     map.zoomIn();
@@ -26,8 +28,8 @@ export default function ZoomControls() {
   };
 
   const handleLocate = () => {
-    if (latitude && longitude) {
-      map.setView([latitude, longitude], 12, {
+    if (userLatitude && userLongitude) {
+      map.setView([userLatitude, userLongitude], DEFAULT_ZOOM, {
         animate: true,
         duration: 1,
       });
@@ -48,7 +50,7 @@ export default function ZoomControls() {
         </Button>
         <Button
           className={`border-b rounded-none ${
-            !(latitude && longitude) ? "rounded-b-sm" : ""
+            !(userLatitude && userLongitude) ? "rounded-b-sm" : ""
           }`}
           onClick={handleZoomOut}
           variant="outline"
@@ -57,7 +59,7 @@ export default function ZoomControls() {
         >
           <Minus className="h-4 w-4" />
         </Button>
-        {latitude && longitude && (
+        {userLatitude && userLongitude && (
           <Button
             className="rounded-none rounded-b-sm"
             onClick={handleLocate}

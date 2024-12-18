@@ -7,7 +7,7 @@ interface Coordinates {
 }
 
 export const useUserCoordinates = () => {
-  const [coordinates, setCoordinates] = useState<Coordinates>({
+  const [userCoordinates, setUserCoordinates] = useState<Coordinates>({
     latitude: null,
     longitude: null,
     error: null,
@@ -16,7 +16,7 @@ export const useUserCoordinates = () => {
   useEffect(() => {
     // check if geolocation is supported by the browser
     if (!navigator.geolocation) {
-      setCoordinates((prev) => ({
+      setUserCoordinates((prev) => ({
         ...prev,
         error: "Geolocation is not supported by your browser",
       }));
@@ -25,7 +25,7 @@ export const useUserCoordinates = () => {
 
     // success callback
     const handleSuccess = (position: GeolocationPosition) => {
-      setCoordinates({
+      setUserCoordinates({
         latitude: position.coords.latitude,
         longitude: position.coords.longitude,
         error: null,
@@ -34,7 +34,7 @@ export const useUserCoordinates = () => {
 
     // error callback
     const handleError = (error: GeolocationPositionError) => {
-      setCoordinates((prev) => ({
+      setUserCoordinates((prev) => ({
         ...prev,
         error: error.message,
       }));
@@ -53,5 +53,5 @@ export const useUserCoordinates = () => {
     return () => navigator.geolocation.clearWatch(watchId);
   }, []);
 
-  return coordinates;
+  return userCoordinates;
 };
