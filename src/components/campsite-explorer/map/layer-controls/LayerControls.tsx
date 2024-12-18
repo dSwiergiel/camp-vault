@@ -20,6 +20,7 @@ interface BaseLayer {
   layers: {
     url: string;
     maxZoom: number;
+    minZoom?: number;
     opacity?: number;
   }[];
 }
@@ -58,19 +59,31 @@ const baseLayers: BaseLayer[] = [
   {
     name: "Hybrid",
     layers: [
+      // trails and regular satilite kicks in at zoom 16
+      // satilite
       {
         url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
         maxZoom: 19,
+        minZoom: 15,
         opacity: 1,
       },
       {
-        url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+        url: "https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}",
         maxZoom: 19,
-        opacity: 0.4,
+        minZoom: 15,
       },
+      // trails
+      {
+        url: "https://caltopo.com/tile/mb_topo/{z}/{x}/{y}.png",
+        maxZoom: 19,
+        minZoom: 15,
+        opacity: 0.7,
+      },
+      // terrain
       {
         url: "https://basemap.nationalmap.gov/arcgis/rest/services/USGSImageryTopo/MapServer/tile/{z}/{y}/{x}",
-        maxZoom: 19,
+        maxZoom: 14,
+        minZoom: 1,
         opacity: 1,
       },
     ],
@@ -106,7 +119,7 @@ const overlayLayers: OverlayLayer[] = [
     name: "Trails",
     url: "https://caltopo.com/tile/mb_topo/{z}/{x}/{y}.png",
     maxZoom: 19,
-    opacity: 0.5,
+    opacity: 0.7,
   },
 ];
 
@@ -139,6 +152,7 @@ export default function LayerControls() {
               key={`${baseLayerGroup.name}-${index}`}
               url={layer.url}
               maxZoom={layer.maxZoom}
+              minZoom={layer.minZoom}
               opacity={
                 baseLayer === baseLayerGroup.name ? layer.opacity ?? 1 : 0
               }
@@ -148,16 +162,18 @@ export default function LayerControls() {
       ))}
 
       {/* overlay layers - always render all in consistent order to control visibility of layers with different opacities */}
-      {overlayLayers.map((layer) => (
-        <TileLayer
-          key={layer.name}
-          url={layer.url}
-          maxZoom={layer.maxZoom}
-          opacity={
-            enabledOverlays.includes(layer.name) ? layer.opacity ?? 1 : 0
-          }
-        />
-      ))}
+      {overlayLayers
+        .sort((a, b) => (a.name === "Water" ? 1 : b.name === "Water" ? -1 : 0))
+        .map((layer) => (
+          <TileLayer
+            key={layer.name}
+            url={layer.url}
+            maxZoom={layer.maxZoom}
+            opacity={
+              enabledOverlays.includes(layer.name) ? layer.opacity ?? 1 : 0
+            }
+          />
+        ))}
 
       {/* controls ui */}
       <div className="leaflet-top leaflet-right">
