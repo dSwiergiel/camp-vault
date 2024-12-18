@@ -1,10 +1,8 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import ClientProviders from "@/lib/context/providers/ClientProviders";
 import { ThemeProvider } from "next-themes";
-import Navbar from "@/components/nav/Navbar";
-import Head from "next/head";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -23,6 +21,11 @@ export const metadata: Metadata = {
     icon: "/tent.svg",
   },
 };
+
+export const viewport: Viewport = {
+  maximumScale: 1,
+};
+
 interface RootLayoutProps {
   children: React.ReactNode;
 }
@@ -33,7 +36,9 @@ export default function RootLayout({ children }: RootLayoutProps) {
       <html lang="en" suppressHydrationWarning>
         <head />
 
-        <body>
+        <body
+          className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        >
           <ThemeProvider
             attribute="class"
             defaultTheme="system"

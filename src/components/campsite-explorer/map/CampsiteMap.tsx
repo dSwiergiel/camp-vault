@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
-import type { LatLngExpression } from "leaflet";
+import type { Icon, LatLngExpression } from "leaflet";
 import "leaflet/dist/leaflet.css";
 
 // dynamically import all components since leaflet needs to be loaded in the browser
@@ -46,7 +46,7 @@ const campsites: Campsite[] = [
 
 export default function CampsiteMap() {
   const [isMounted, setIsMounted] = useState(false);
-  const [icon, setIcon] = useState<any>(null);
+  const [icon, setIcon] = useState<Icon | undefined>(undefined);
 
   useEffect(() => {
     import("leaflet").then(({ Icon }) => {

@@ -12,7 +12,6 @@ import {
   DropdownMenuCheckboxItem,
 } from "@/components/ui/dropdown-menu";
 import { Layers } from "lucide-react";
-import { useMap } from "react-leaflet";
 import { useState } from "react";
 import { TileLayer, LayerGroup } from "react-leaflet";
 

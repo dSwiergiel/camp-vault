@@ -14,7 +14,6 @@ import { ThemeToggle } from "@/components/nav/ThemeToggle";
 export default function Navbar() {
   const LINKS = [
     { label: "Explore", href: "/explore" },
-    //   { label: "Spots", href: "/spots" },
     { label: "Community", href: "/community" },
   ];
   return (
