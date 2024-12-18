@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
-import type { Icon, LatLngExpression, DivIcon } from "leaflet";
+import type { Icon, DivIcon } from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { useUserCoordinates } from "@/lib/hooks/useUserCoordinates";
 import { renderToStaticMarkup } from "react-dom/server";

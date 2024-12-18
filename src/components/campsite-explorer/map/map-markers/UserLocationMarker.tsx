@@ -1,5 +1,3 @@
-import { CircleDot } from "lucide-react";
-
 export default function UserLocationMarker() {
   return (
     <div className="relative">

@@ -42,15 +42,15 @@ export default function ZoomControls() {
     }
   }, [userLatitude, userLongitude, permissionDenied, map]);
 
-  const handleZoomIn = (e: React.MouseEvent) => {
+  const handleZoomIn = () => {
     map.zoomIn();
   };
 
-  const handleZoomOut = (e: React.MouseEvent) => {
+  const handleZoomOut = () => {
     map.zoomOut();
   };
 
-  const handleLocate = (e: React.MouseEvent) => {
+  const handleLocate = () => {
     requestLocation();
     if (userLatitude && userLongitude) {
       map.setView([userLatitude, userLongitude], DEFAULT_ZOOM, {
