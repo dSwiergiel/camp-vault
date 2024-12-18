@@ -2,8 +2,11 @@
 
 import React, { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
-import type { Icon, LatLngExpression } from "leaflet";
+import type { Icon, LatLngExpression, DivIcon } from "leaflet";
 import "leaflet/dist/leaflet.css";
+import { useUserCoordinates } from "@/lib/hooks/useUserCoordinates";
+import { renderToStaticMarkup } from "react-dom/server";
+import UserLocationMarker from "./map-markers/UserLocationMarker";
 
 // dynamically import all components since leaflet needs to be loaded in the browser
 const MapContainer = dynamic(
@@ -47,9 +50,12 @@ const campsites: Campsite[] = [
 export default function CampsiteMap() {
   const [isMounted, setIsMounted] = useState(false);
   const [icon, setIcon] = useState<Icon | undefined>(undefined);
+  const [userIcon, setUserIcon] = useState<DivIcon | undefined>(undefined);
+  const { latitude, longitude } = useUserCoordinates();
 
   useEffect(() => {
-    import("leaflet").then(({ Icon }) => {
+    import("leaflet").then(({ Icon, DivIcon }) => {
+      // Campsite marker icon
       setIcon(
         new Icon({
           iconUrl:
@@ -64,6 +70,17 @@ export default function CampsiteMap() {
           shadowSize: [41, 41],
         })
       );
+
+      // User location marker using DivIcon
+      setUserIcon(
+        new DivIcon({
+          html: renderToStaticMarkup(<UserLocationMarker />),
+          className: "user-location-marker",
+          iconSize: [24, 24],
+          iconAnchor: [12, 12],
+        })
+      );
+
       setIsMounted(true);
     });
   }, []);
@@ -88,7 +105,18 @@ export default function CampsiteMap() {
         <ZoomControls />
         <LayerControls />
 
-        {/* Campsite Markers */}
+        {/* user location marker */}
+        {latitude && longitude && userIcon && (
+          <Marker
+            position={[latitude, longitude]}
+            icon={userIcon}
+            title="Your location"
+          >
+            <Popup>You are here</Popup>
+          </Marker>
+        )}
+
+        {/* campsite markers */}
         {campsites.map((campsite) => (
           <Marker key={campsite.id} position={campsite.position} icon={icon}>
             <Popup>{campsite.name}</Popup>

@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { LocateFixed, Minus, Plus } from "lucide-react";
 import { useMap } from "react-leaflet";
@@ -9,6 +9,13 @@ import { useUserCoordinates } from "@/lib/hooks/useUserCoordinates";
 export default function ZoomControls() {
   const map = useMap();
   const { latitude, longitude } = useUserCoordinates();
+
+  // Automatically center map on user's location when coordinates become available
+  useEffect(() => {
+    if (latitude && longitude) {
+      map.setView([latitude, longitude], 12);
+    }
+  }, [latitude, longitude, map]);
 
   const handleZoomIn = () => {
     map.zoomIn();
@@ -20,7 +27,10 @@ export default function ZoomControls() {
 
   const handleLocate = () => {
     if (latitude && longitude) {
-      map.setView([latitude, longitude], 12);
+      map.setView([latitude, longitude], 12, {
+        animate: true,
+        duration: 1,
+      });
     }
   };
 
