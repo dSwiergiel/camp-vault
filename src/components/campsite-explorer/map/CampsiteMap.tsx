@@ -5,7 +5,7 @@ import dynamic from "next/dynamic";
 import type { LatLngExpression } from "leaflet";
 import "leaflet/dist/leaflet.css";
 
-// Dynamically import all components since leaflet needs to be loaded in the browser
+// dynamically import all components since leaflet needs to be loaded in the browser
 const MapContainer = dynamic(
   () => import("react-leaflet").then((mod) => mod.MapContainer),
   { ssr: false }
@@ -31,17 +31,17 @@ const ZoomControls = dynamic(() => import("./zoom-controls/ZoomControls"), {
 const DEFAULT_CENTER: LatLngExpression = [43.371122, -74.730233];
 const DEFAULT_ZOOM = 15;
 
-// Define your campsite interface
+// define your campsite interface
 interface Campsite {
   id: string;
   name: string;
   position: [number, number]; // [latitude, longitude]
 }
 
-// Example campsites data
+// example campsites data
 const campsites: Campsite[] = [
   { id: "1", name: "Sunny Valley", position: [51.505, -0.09] },
-  // Add more campsites...
+  // add more campsites...
 ];
 
 export default function CampsiteMap() {
@@ -73,7 +73,7 @@ export default function CampsiteMap() {
   }
 
   return (
-    <div className="container mx-auto h-full">
+    <div className="container mx-auto h-[calc(100vh-4rem)]">
       <MapContainer
         center={DEFAULT_CENTER as LatLngExpression}
         zoom={DEFAULT_ZOOM}

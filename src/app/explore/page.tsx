@@ -3,7 +3,7 @@ import CampsiteList from "@/components/campsite-explorer/list/CampsiteList";
 
 export default function Explore() {
   return (
-    <div>
+    <div className="p-4">
       <CampsiteMap />
       <CampsiteList />
     </div>
