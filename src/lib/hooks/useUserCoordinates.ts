@@ -1,9 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useCallback } from "react";
 
 interface Coordinates {
   latitude: number | null;
   longitude: number | null;
   error: string | null;
+  permissionDenied: boolean;
+  isLoading: boolean;
 }
 
 export const useUserCoordinates = () => {
@@ -11,47 +13,42 @@ export const useUserCoordinates = () => {
     latitude: null,
     longitude: null,
     error: null,
+    permissionDenied: false,
+    isLoading: true,
   });
 
-  useEffect(() => {
-    // check if geolocation is supported by the browser
+  const requestLocation = useCallback(() => {
     if (!navigator.geolocation) {
       setUserCoordinates((prev) => ({
         ...prev,
-        error: "Geolocation is not supported by your browser",
+        error: "Geolocation is not supported",
+        permissionDenied: true,
+        isLoading: false,
       }));
       return;
     }
 
-    // success callback
     const handleSuccess = (position: GeolocationPosition) => {
       setUserCoordinates({
         latitude: position.coords.latitude,
         longitude: position.coords.longitude,
         error: null,
+        permissionDenied: false,
+        isLoading: false,
       });
     };
 
-    // error callback
     const handleError = (error: GeolocationPositionError) => {
       setUserCoordinates((prev) => ({
         ...prev,
         error: error.message,
+        permissionDenied: error.code === 1,
+        isLoading: false,
       }));
     };
 
-    // get the current position
     navigator.geolocation.getCurrentPosition(handleSuccess, handleError);
-
-    // optional: use watchPosition to keep tracking location changes
-    const watchId = navigator.geolocation.watchPosition(
-      handleSuccess,
-      handleError
-    );
-
-    // cleanup: remove the watch when component unmounts
-    return () => navigator.geolocation.clearWatch(watchId);
   }, []);
 
-  return userCoordinates;
+  return { ...userCoordinates, requestLocation };
 };

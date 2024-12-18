@@ -5,29 +5,53 @@ import { Button } from "@/components/ui/button";
 import { LocateFixed, Minus, Plus } from "lucide-react";
 import { useMap } from "react-leaflet";
 import { useUserCoordinates } from "@/lib/hooks/useUserCoordinates";
-import { DEFAULT_ZOOM } from "@/lib/constants";
+import { DEFAULT_ZOOM, DEFAULT_CENTER } from "@/lib/constants";
 
 export default function ZoomControls() {
   const map = useMap();
-  const { latitude: userLatitude, longitude: userLongitude } =
-    useUserCoordinates();
+  const hasInitiallyCentered = React.useRef(false);
+  const {
+    latitude: userLatitude,
+    longitude: userLongitude,
+    requestLocation,
+    permissionDenied,
+  } = useUserCoordinates();
 
-  // automatically center map on user's location when coordinates become available
   useEffect(() => {
-    if (userLatitude && userLongitude) {
-      map.setView([userLatitude, userLongitude], DEFAULT_ZOOM);
-    }
-  }, [userLatitude, userLongitude, map]);
+    // Request location once when component mounts
+    requestLocation();
+  }, [requestLocation]);
 
-  const handleZoomIn = () => {
+  useEffect(() => {
+    if (!hasInitiallyCentered.current) {
+      if (userLatitude && userLongitude) {
+        // User approved location - center on their position
+        map.setView([userLatitude, userLongitude], DEFAULT_ZOOM, {
+          animate: true,
+          duration: 1,
+        });
+        hasInitiallyCentered.current = true;
+      } else if (permissionDenied) {
+        // User denied location - center on default coordinates
+        map.setView(DEFAULT_CENTER, DEFAULT_ZOOM, {
+          animate: true,
+          duration: 1,
+        });
+        hasInitiallyCentered.current = true;
+      }
+    }
+  }, [userLatitude, userLongitude, permissionDenied, map]);
+
+  const handleZoomIn = (e: React.MouseEvent) => {
     map.zoomIn();
   };
 
-  const handleZoomOut = () => {
+  const handleZoomOut = (e: React.MouseEvent) => {
     map.zoomOut();
   };
 
-  const handleLocate = () => {
+  const handleLocate = (e: React.MouseEvent) => {
+    requestLocation();
     if (userLatitude && userLongitude) {
       map.setView([userLatitude, userLongitude], DEFAULT_ZOOM, {
         animate: true,

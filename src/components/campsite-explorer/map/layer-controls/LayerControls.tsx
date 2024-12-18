@@ -61,7 +61,7 @@ const baseLayers: BaseLayer[] = [
       {
         url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
         maxZoom: 19,
-        opacity: 0.9,
+        opacity: 1,
       },
       {
         url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
@@ -71,7 +71,7 @@ const baseLayers: BaseLayer[] = [
       {
         url: "https://basemap.nationalmap.gov/arcgis/rest/services/USGSImageryTopo/MapServer/tile/{z}/{y}/{x}",
         maxZoom: 19,
-        opacity: 0.6,
+        opacity: 1,
       },
     ],
   },
@@ -89,18 +89,18 @@ const baseLayers: BaseLayer[] = [
 
 const overlayLayers: OverlayLayer[] = [
   {
+    name: "Water",
+    url: "https://basemap.nationalmap.gov/arcgis/rest/services/USGSHydroCached/MapServer/tile/{z}/{y}/{x}",
+    maxZoom: 19,
+    opacity: 1,
+    checked: false,
+  },
+  {
     name: "Terrain",
     url: "https://basemap.nationalmap.gov/arcgis/rest/services/USGSImageryTopo/MapServer/tile/{z}/{y}/{x}",
     maxZoom: 19,
     opacity: 0.6,
-    checked: true,
-  },
-  {
-    name: "Hydrology",
-    url: "https://basemap.nationalmap.gov/arcgis/rest/services/USGSHydroCached/MapServer/tile/{z}/{y}/{x}",
-    maxZoom: 19,
-    opacity: 1,
-    checked: true,
+    checked: false,
   },
   {
     name: "Trails",

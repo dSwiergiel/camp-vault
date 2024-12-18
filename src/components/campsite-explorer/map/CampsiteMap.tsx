@@ -49,16 +49,18 @@ export default function CampsiteMap() {
   const [isMounted, setIsMounted] = useState(false);
   const [icon, setIcon] = useState<Icon | undefined>(undefined);
   const [userIcon, setUserIcon] = useState<DivIcon | undefined>(undefined);
-  const { latitude: userLatitude, longitude: userLongitude } =
-    useUserCoordinates();
+  const {
+    latitude,
+    longitude,
+    isLoading: locationLoading,
+    requestLocation,
+  } = useUserCoordinates();
 
-  // Add loading state that only checks for mounting and icon loading
-  // We don't wait for coordinates since they're optional
-  const isLoading = !isMounted || !icon || !userIcon;
+  const isLoading = !isMounted || !icon || !userIcon || locationLoading;
 
   useEffect(() => {
     import("leaflet").then(({ Icon, DivIcon }) => {
-      // Campsite marker icon
+      // campsite marker icon
       setIcon(
         new Icon({
           iconUrl:
@@ -74,7 +76,7 @@ export default function CampsiteMap() {
         })
       );
 
-      // User location marker using DivIcon
+      // ser location marker using DivIcon
       setUserIcon(
         new DivIcon({
           html: renderToStaticMarkup(<UserLocationMarker />),
@@ -88,6 +90,10 @@ export default function CampsiteMap() {
     });
   }, []);
 
+  useEffect(() => {
+    requestLocation();
+  }, [requestLocation]);
+
   if (isLoading) {
     return (
       <div className="container mx-auto h-[calc(100vh-4rem)]">
@@ -99,11 +105,7 @@ export default function CampsiteMap() {
   return (
     <div className="container mx-auto h-[calc(100vh-4rem)]">
       <MapContainer
-        center={
-          userLatitude && userLongitude
-            ? [userLatitude, userLongitude]
-            : DEFAULT_CENTER
-        }
+        center={latitude && longitude ? [latitude, longitude] : DEFAULT_CENTER}
         zoom={DEFAULT_ZOOM}
         className="w-full h-[calc(100vh-14.5rem)] z-0 rounded-sm"
         zoomControl={false}
@@ -117,9 +119,9 @@ export default function CampsiteMap() {
         <LayerControls />
 
         {/* user location marker */}
-        {userLatitude && userLongitude && userIcon && (
+        {latitude && longitude && userIcon && (
           <Marker
-            position={[userLatitude, userLongitude]}
+            position={[latitude, longitude]}
             icon={userIcon}
             title="Your location"
           >
