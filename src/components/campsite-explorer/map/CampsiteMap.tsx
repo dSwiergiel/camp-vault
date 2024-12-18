@@ -1,23 +1,33 @@
 "use client";
 
-import React, { useState } from "react";
-import {
-  MapContainer,
-  TileLayer,
-  LayerGroup,
-  Marker,
-  Popup,
-  ZoomControl,
-  LayersControl,
-  AttributionControl,
-} from "react-leaflet";
-import { Icon } from "leaflet";
-import { LatLngExpression } from "leaflet";
+import React, { useEffect, useState } from "react";
+import dynamic from "next/dynamic";
+import type { LatLngExpression } from "leaflet";
 import "leaflet/dist/leaflet.css";
-import ZoomControls from "./zoom-controls/ZoomControls";
-import LayerControls from "./layer-controls/LayerControls";
 
-// You might want to adjust these default coordinates to your area of interest
+// Dynamically import all components since leaflet needs to be loaded in the browser
+const MapContainer = dynamic(
+  () => import("react-leaflet").then((mod) => mod.MapContainer),
+  { ssr: false }
+);
+const Marker = dynamic(
+  () => import("react-leaflet").then((mod) => mod.Marker),
+  { ssr: false }
+);
+const Popup = dynamic(() => import("react-leaflet").then((mod) => mod.Popup), {
+  ssr: false,
+});
+const AttributionControl = dynamic(
+  () => import("react-leaflet").then((mod) => mod.AttributionControl),
+  { ssr: false }
+);
+const LayerControls = dynamic(() => import("./layer-controls/LayerControls"), {
+  ssr: false,
+});
+const ZoomControls = dynamic(() => import("./zoom-controls/ZoomControls"), {
+  ssr: false,
+});
+
 const DEFAULT_CENTER: LatLngExpression = [43.371122, -74.730233];
 const DEFAULT_ZOOM = 15;
 
@@ -35,6 +45,33 @@ const campsites: Campsite[] = [
 ];
 
 export default function CampsiteMap() {
+  const [isMounted, setIsMounted] = useState(false);
+  const [icon, setIcon] = useState<any>(null);
+
+  useEffect(() => {
+    import("leaflet").then(({ Icon }) => {
+      setIcon(
+        new Icon({
+          iconUrl:
+            "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
+          iconRetinaUrl:
+            "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
+          shadowUrl:
+            "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+          iconSize: [25, 41],
+          iconAnchor: [12, 41],
+          popupAnchor: [1, -34],
+          shadowSize: [41, 41],
+        })
+      );
+      setIsMounted(true);
+    });
+  }, []);
+
+  if (!isMounted) {
+    return <div className="container mx-auto h-full">Loading map...</div>;
+  }
+
   return (
     <div className="container mx-auto h-full">
       <MapContainer
@@ -53,7 +90,7 @@ export default function CampsiteMap() {
 
         {/* Campsite Markers */}
         {campsites.map((campsite) => (
-          <Marker key={campsite.id} position={campsite.position}>
+          <Marker key={campsite.id} position={campsite.position} icon={icon}>
             <Popup>{campsite.name}</Popup>
           </Marker>
         ))}

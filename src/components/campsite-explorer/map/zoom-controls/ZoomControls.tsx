@@ -1,6 +1,8 @@
+"use client";
+
+import React from "react";
 import { Button } from "@/components/ui/button";
-import { LocateFixed, Minus } from "lucide-react";
-import { Plus } from "lucide-react";
+import { LocateFixed, Minus, Plus } from "lucide-react";
 import { useMap } from "react-leaflet";
 import { useUserCoordinates } from "@/lib/hooks/useUserCoordinates";
 
