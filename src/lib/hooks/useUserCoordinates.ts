@@ -14,7 +14,7 @@ export const useUserCoordinates = () => {
   });
 
   useEffect(() => {
-    // Check if geolocation is supported by the browser
+    // check if geolocation is supported by the browser
     if (!navigator.geolocation) {
       setCoordinates((prev) => ({
         ...prev,
@@ -23,7 +23,7 @@ export const useUserCoordinates = () => {
       return;
     }
 
-    // Success callback
+    // success callback
     const handleSuccess = (position: GeolocationPosition) => {
       setCoordinates({
         latitude: position.coords.latitude,
@@ -32,7 +32,7 @@ export const useUserCoordinates = () => {
       });
     };
 
-    // Error callback
+    // error callback
     const handleError = (error: GeolocationPositionError) => {
       setCoordinates((prev) => ({
         ...prev,
@@ -40,16 +40,16 @@ export const useUserCoordinates = () => {
       }));
     };
 
-    // Get the current position
+    // get the current position
     navigator.geolocation.getCurrentPosition(handleSuccess, handleError);
 
-    // Optional: Use watchPosition to keep tracking location changes
+    // optional: use watchPosition to keep tracking location changes
     const watchId = navigator.geolocation.watchPosition(
       handleSuccess,
       handleError
     );
 
-    // Cleanup: remove the watch when component unmounts
+    // cleanup: remove the watch when component unmounts
     return () => navigator.geolocation.clearWatch(watchId);
   }, []);
 

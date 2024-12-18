@@ -15,6 +15,7 @@ import { Icon } from "leaflet";
 import { LatLngExpression } from "leaflet";
 import "leaflet/dist/leaflet.css";
 import ZoomControls from "./zoom-controls/ZoomControls";
+import LayerControls from "./layer-controls/LayerControls";
 
 // You might want to adjust these default coordinates to your area of interest
 const DEFAULT_CENTER: LatLngExpression = [43.371122, -74.730233];
@@ -48,120 +49,8 @@ export default function CampsiteMap() {
           prefix='<a href="/explore/map-providers">Map Data Providers</a>'
         />
         <ZoomControls />
-        <LayersControl position="topright">
-          {/* OpenStreetMap Base Layer */}
-          <LayersControl.BaseLayer name="Street Map">
-            <TileLayer
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              // attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-              maxZoom={19}
-            />
-          </LayersControl.BaseLayer>
+        <LayerControls />
 
-          {/* Satellite Layer */}
-          <LayersControl.BaseLayer name="Satellite">
-            <LayerGroup>
-              <TileLayer
-                url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
-                // attribution="Tiles © Esri — Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community"
-                maxZoom={19}
-              />
-              <TileLayer
-                url="https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}"
-                // attribution="Labels © Esri"
-                maxZoom={19}
-              />
-            </LayerGroup>
-          </LayersControl.BaseLayer>
-
-          {/* New Hybrid Layer */}
-          <LayersControl.BaseLayer checked name="Hybrid">
-            <LayerGroup>
-              <TileLayer
-                url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
-                // attribution="Tiles © Esri — Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community"
-                maxZoom={19}
-                opacity={0.9}
-              />
-              <TileLayer
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                // attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                maxZoom={19}
-                opacity={0.4}
-              />
-              <TileLayer
-                url="https://basemap.nationalmap.gov/arcgis/rest/services/USGSImageryTopo/MapServer/tile/{z}/{y}/{x}"
-                // attribution="USGS"
-                maxZoom={19}
-                opacity={0.6}
-              />
-              {/* <TileLayer
-                url="https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png"
-                attribution='Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a>'
-                maxZoom={19}
-                opacity={0.2}
-              /> */}
-            </LayerGroup>
-          </LayersControl.BaseLayer>
-
-          {/* New Topographic Base Layer */}
-          <LayersControl.BaseLayer name="Topographic">
-            <TileLayer
-              url="https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png"
-              // attribution='Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a>'
-              maxZoom={19}
-              opacity={0.5}
-            />
-          </LayersControl.BaseLayer>
-
-          {/* Add these new overlays */}
-          <LayersControl.Overlay checked name="Terrain">
-            <TileLayer
-              url="https://basemap.nationalmap.gov/arcgis/rest/services/USGSImageryTopo/MapServer/tile/{z}/{y}/{x}"
-              // attribution="USGS"
-              maxZoom={19}
-              opacity={0.6}
-            />
-          </LayersControl.Overlay>
-
-          <LayersControl.Overlay checked name="Hydrology">
-            <TileLayer
-              url="https://basemap.nationalmap.gov/arcgis/rest/services/USGSHydroCached/MapServer/tile/{z}/{y}/{x}"
-              // attribution="USGS"
-              maxZoom={19}
-              opacity={1}
-            />
-          </LayersControl.Overlay>
-
-          {/* <LayersControl.Overlay name="Terrain Features">
-            <LayerGroup>
-              <TileLayer
-                url="https://services.arcgisonline.com/arcgis/rest/services/Ocean/World_Ocean_Base/MapServer/tile/{z}/{y}/{x}"
-                attribution="Esri"
-                maxZoom={19}
-                opacity={0.4}
-              />
-            </LayerGroup>
-          </LayersControl.Overlay> */}
-
-          {/* Trail Overlays */}
-          <LayersControl.Overlay name="Trails">
-            <TileLayer
-              url="https://caltopo.com/tile/mb_topo/{z}/{x}/{y}.png"
-              // attribution='&copy; <a href="https://caltopo.com/">Caltopo</a>'
-              maxZoom={19}
-              opacity={0.5}
-            />
-          </LayersControl.Overlay>
-          <LayersControl.Overlay name="Topographic">
-            <TileLayer
-              url="https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png"
-              // attribution='Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a>'
-              maxZoom={19}
-              opacity={0.5}
-            />
-          </LayersControl.Overlay>
-        </LayersControl>
         {/* Campsite Markers */}
         {campsites.map((campsite) => (
           <Marker key={campsite.id} position={campsite.position}>
