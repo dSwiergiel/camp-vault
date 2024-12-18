@@ -82,4 +82,5 @@ body {
 
 .leaflet-control-attribution a {
   color: #111111 !important;
+  margin-left: 10px;
 }

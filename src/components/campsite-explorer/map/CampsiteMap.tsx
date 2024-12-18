@@ -43,14 +43,17 @@ export default function CampsiteMap() {
         zoomControl={false}
         attributionControl={false}
       >
-        <AttributionControl position="bottomleft" />
+        <AttributionControl
+          position="bottomleft"
+          prefix='<a href="/explore/map-providers">Map Data Providers</a>'
+        />
         <ZoomControls />
         <LayersControl position="topright">
           {/* OpenStreetMap Base Layer */}
           <LayersControl.BaseLayer name="Street Map">
             <TileLayer
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+              // attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
               maxZoom={19}
             />
           </LayersControl.BaseLayer>
@@ -60,12 +63,12 @@ export default function CampsiteMap() {
             <LayerGroup>
               <TileLayer
                 url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
-                attribution="Tiles © Esri — Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community"
+                // attribution="Tiles © Esri — Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community"
                 maxZoom={19}
               />
               <TileLayer
                 url="https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}"
-                attribution="Labels © Esri"
+                // attribution="Labels © Esri"
                 maxZoom={19}
               />
             </LayerGroup>
@@ -76,19 +79,19 @@ export default function CampsiteMap() {
             <LayerGroup>
               <TileLayer
                 url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
-                attribution="Tiles © Esri — Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community"
+                // attribution="Tiles © Esri — Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community"
                 maxZoom={19}
                 opacity={0.9}
               />
               <TileLayer
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                // attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                 maxZoom={19}
                 opacity={0.4}
               />
               <TileLayer
                 url="https://basemap.nationalmap.gov/arcgis/rest/services/USGSImageryTopo/MapServer/tile/{z}/{y}/{x}"
-                attribution="USGS"
+                // attribution="USGS"
                 maxZoom={19}
                 opacity={0.6}
               />
@@ -105,7 +108,7 @@ export default function CampsiteMap() {
           <LayersControl.BaseLayer name="Topographic">
             <TileLayer
               url="https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png"
-              attribution='Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a>'
+              // attribution='Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a>'
               maxZoom={19}
               opacity={0.5}
             />
@@ -115,7 +118,7 @@ export default function CampsiteMap() {
           <LayersControl.Overlay checked name="Terrain">
             <TileLayer
               url="https://basemap.nationalmap.gov/arcgis/rest/services/USGSImageryTopo/MapServer/tile/{z}/{y}/{x}"
-              attribution="USGS"
+              // attribution="USGS"
               maxZoom={19}
               opacity={0.6}
             />
@@ -124,7 +127,7 @@ export default function CampsiteMap() {
           <LayersControl.Overlay checked name="Hydrology">
             <TileLayer
               url="https://basemap.nationalmap.gov/arcgis/rest/services/USGSHydroCached/MapServer/tile/{z}/{y}/{x}"
-              attribution="USGS"
+              // attribution="USGS"
               maxZoom={19}
               opacity={1}
             />
@@ -145,7 +148,7 @@ export default function CampsiteMap() {
           <LayersControl.Overlay name="Trails">
             <TileLayer
               url="https://caltopo.com/tile/mb_topo/{z}/{x}/{y}.png"
-              attribution='&copy; <a href="https://caltopo.com/">Caltopo</a>'
+              // attribution='&copy; <a href="https://caltopo.com/">Caltopo</a>'
               maxZoom={19}
               opacity={0.5}
             />
@@ -153,7 +156,7 @@ export default function CampsiteMap() {
           <LayersControl.Overlay name="Topographic">
             <TileLayer
               url="https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png"
-              attribution='Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a>'
+              // attribution='Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a>'
               maxZoom={19}
               opacity={0.5}
             />
