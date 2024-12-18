@@ -1,18 +1,17 @@
 "use client";
 
-import { ThemeProvider } from "@/lib/context/theme/ThemeContext";
 import Navbar from "../../../components/nav/Navbar";
 
 interface ClientProvidersProps {
   children: React.ReactNode;
 }
+
+// use this to wrap the app with non SSR components
 export default function ClientProviders({ children }: ClientProvidersProps) {
   return (
     <>
-      <ThemeProvider defaultTheme="system" storageKey="app-theme">
-        <Navbar />
-        {children}
-      </ThemeProvider>
+      <Navbar />
+      {children}
     </>
   );
 }

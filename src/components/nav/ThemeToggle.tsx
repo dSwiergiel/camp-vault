@@ -1,11 +1,10 @@
 "use client";
 
 import { Moon, Sun } from "lucide-react";
-// import { useTheme } from "@/lib/context/theme/ThemeContext";
 import { useTheme } from "next-themes";
-
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
+import { useEffect, useState } from "react";
 
 interface ThemeToggleProps {
   className?: string;
@@ -13,6 +12,15 @@ interface ThemeToggleProps {
 
 export function ThemeToggle({ className }: ThemeToggleProps) {
   const { setTheme, theme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return null;
+  }
 
   return (
     <>
