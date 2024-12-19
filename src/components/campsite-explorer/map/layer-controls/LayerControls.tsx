@@ -76,13 +76,13 @@ const baseLayers: BaseLayer[] = [
       {
         url: "https://caltopo.com/tile/mb_topo/{z}/{x}/{y}.png",
         maxZoom: 19,
-        minZoom: 15,
+        minZoom: 16,
         opacity: 0.7,
       },
       // terrain
       {
         url: "https://basemap.nationalmap.gov/arcgis/rest/services/USGSImageryTopo/MapServer/tile/{z}/{y}/{x}",
-        maxZoom: 14,
+        maxZoom: 15,
         minZoom: 12,
         opacity: 1,
       },
