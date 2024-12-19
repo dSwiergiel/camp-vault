@@ -64,13 +64,13 @@ const baseLayers: BaseLayer[] = [
       {
         url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
         maxZoom: 19,
-        minZoom: 15,
+        // minZoom: 15,
         opacity: 1,
       },
       {
         url: "https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}",
         maxZoom: 19,
-        minZoom: 15,
+        // minZoom: 15,
       },
       // trails
       {
@@ -83,7 +83,7 @@ const baseLayers: BaseLayer[] = [
       {
         url: "https://basemap.nationalmap.gov/arcgis/rest/services/USGSImageryTopo/MapServer/tile/{z}/{y}/{x}",
         maxZoom: 14,
-        minZoom: 1,
+        minZoom: 12,
         opacity: 1,
       },
     ],
@@ -120,6 +120,7 @@ const overlayLayers: OverlayLayer[] = [
     url: "https://caltopo.com/tile/mb_topo/{z}/{x}/{y}.png",
     maxZoom: 19,
     opacity: 0.7,
+    checked: false,
   },
 ];
 

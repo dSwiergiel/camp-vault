@@ -18,7 +18,7 @@ export default function ZoomControls() {
   } = useUserCoordinates();
 
   useEffect(() => {
-    // Request location once when component mounts
+    // request location once when component mounts
     requestLocation();
   }, [requestLocation]);
 
