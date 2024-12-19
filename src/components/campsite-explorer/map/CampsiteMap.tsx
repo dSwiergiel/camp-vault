@@ -7,7 +7,6 @@ import "leaflet/dist/leaflet.css";
 import { useUserCoordinates } from "@/lib/hooks/useUserCoordinates";
 import { renderToStaticMarkup } from "react-dom/server";
 import UserLocationMarker from "./map-markers/UserLocationMarker";
-import { Skeleton } from "@/components/ui/skeleton";
 import { DEFAULT_CENTER, DEFAULT_ZOOM } from "@/lib/constants";
 // dynamically import all components since leaflet needs to be loaded in the browser
 const MapContainer = dynamic(
