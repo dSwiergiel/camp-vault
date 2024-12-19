@@ -107,7 +107,7 @@ export default function CampsiteMap({ onLoadingChange }: CampsiteMapProps) {
       <MapContainer
         center={latitude && longitude ? [latitude, longitude] : DEFAULT_CENTER}
         zoom={DEFAULT_ZOOM}
-        className="w-full h-[calc(100vh-14.5rem)] z-0 rounded-sm [&.leaflet-container]:!bg-primary/10"
+        className="w-full h-[calc(100vh-10.5rem)] z-0 rounded-sm [&.leaflet-container]:!bg-primary/10"
         zoomControl={false}
         attributionControl={false}
       >
