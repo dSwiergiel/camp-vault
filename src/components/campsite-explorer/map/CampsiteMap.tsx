@@ -8,6 +8,9 @@ import { useUserCoordinates } from "@/lib/hooks/useUserCoordinates";
 import { renderToStaticMarkup } from "react-dom/server";
 import UserLocationMarker from "./map-markers/UserLocationMarker";
 import { DEFAULT_CENTER, DEFAULT_ZOOM } from "@/lib/constants";
+import campsitesData from "@/campsite-data/NYS_campsite_data.json";
+import { Campsite } from "@/lib/models/campsite.model";
+
 // dynamically import all components since leaflet needs to be loaded in the browser
 const MapContainer = dynamic(
   () => import("react-leaflet").then((mod) => mod.MapContainer),
@@ -31,19 +34,6 @@ const ZoomControls = dynamic(() => import("./zoom-controls/ZoomControls"), {
   ssr: false,
 });
 
-// define your campsite interface
-interface Campsite {
-  id: string;
-  name: string;
-  position: [number, number]; // [latitude, longitude]
-}
-
-// example campsites data
-const campsites: Campsite[] = [
-  { id: "1", name: "Sunny Valley", position: [51.505, -0.09] },
-  // add more campsites...
-];
-
 interface CampsiteMapProps {
   onLoadingChange?: (isLoading: boolean) => void;
 }
@@ -58,6 +48,7 @@ export default function CampsiteMap({ onLoadingChange }: CampsiteMapProps) {
     isLoading: locationLoading,
     requestLocation,
   } = useUserCoordinates();
+  const [campsites, setCampsites] = useState<Campsite[]>([]);
 
   const isLoading = !isMounted || !icon || !userIcon || locationLoading;
 
@@ -90,6 +81,7 @@ export default function CampsiteMap({ onLoadingChange }: CampsiteMapProps) {
       );
 
       setIsMounted(true);
+      setCampsites(campsitesData as Campsite[]);
     });
   }, []);
 
@@ -129,11 +121,69 @@ export default function CampsiteMap({ onLoadingChange }: CampsiteMapProps) {
         )}
 
         {/* campsite markers */}
-        {campsites.map((campsite) => (
-          <Marker key={campsite.id} position={campsite.position} icon={icon}>
-            <Popup>{campsite.name}</Popup>
-          </Marker>
-        ))}
+        {campsites.map((campsite, index) => {
+          return (
+            <Marker
+              key={index}
+              icon={icon}
+              position={[
+                campsite.coordinates.latitude,
+                campsite.coordinates.longitude,
+              ]}
+            >
+              <Popup>
+                <strong>{campsite.site_name}</strong>
+                <br />
+                Type: {campsite.type}
+                <br />
+                Location: {campsite.location_name}
+                <br />
+                Coordinates:{" "}
+                <a
+                  href={`https://www.google.com/maps?q=${campsite.coordinates.latitude},${campsite.coordinates.longitude}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {campsite.coordinates.latitude.toFixed(4)},{" "}
+                  {campsite.coordinates.longitude.toFixed(4)}
+                </a>
+              </Popup>
+            </Marker>
+          );
+        })}
+
+        {/* <MarkerClusterGroup
+          chunkedLoading
+          maxClusterRadius={50} // Adjust this value to control cluster size
+        >
+          {campsites.map((campsite, index) => (
+            <Marker
+              key={index}
+              position={[
+                campsite.coordinates.latitude,
+                campsite.coordinates.longitude,
+              ]}
+            >
+              <Popup>
+                <strong>{campsite.site_name}</strong>
+                <br />
+                Type: {campsite.type}
+                <br />
+                Location: {campsite.location_name}
+                <br />
+                Coordinates:{" "}
+                <a
+                  href={`https://www.google.com/maps?q=${campsite.coordinates.latitude},${campsite.coordinates.longitude}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {campsite.coordinates.latitude.toFixed(4)},{" "}
+                  {campsite.coordinates.longitude.toFixed(4)}
+                </a>
+              </Popup>
+            </Marker>
+          ))}
+        </MarkerClusterGroup> */}
       </MapContainer>
     </div>
   );
