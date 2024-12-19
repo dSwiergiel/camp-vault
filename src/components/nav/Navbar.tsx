@@ -17,8 +17,8 @@ export default function Navbar() {
     { label: "Community", href: "/community" },
   ];
   return (
-    <nav className="border-b border-input bg-card">
-      <div className="container mx-auto px-4">
+    <nav className="border-b border-input bg-card flex justify-center">
+      <div className="container mx-4">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center">
             <Link href="/" className="flex items-center">

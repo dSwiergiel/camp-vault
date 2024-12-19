@@ -45,7 +45,11 @@ const campsites: Campsite[] = [
   // add more campsites...
 ];
 
-export default function CampsiteMap() {
+interface CampsiteMapProps {
+  onLoadingChange?: (isLoading: boolean) => void;
+}
+
+export default function CampsiteMap({ onLoadingChange }: CampsiteMapProps) {
   const [isMounted, setIsMounted] = useState(false);
   const [icon, setIcon] = useState<Icon | undefined>(undefined);
   const [userIcon, setUserIcon] = useState<DivIcon | undefined>(undefined);
@@ -94,20 +98,16 @@ export default function CampsiteMap() {
     requestLocation();
   }, [requestLocation]);
 
-  if (isLoading) {
-    return (
-      <div className="container mx-auto h-[calc(100vh-4rem)]">
-        <Skeleton className="h-[calc(100vh-14.5rem)] w-full rounded-lg bg-muted" />
-      </div>
-    );
-  }
+  useEffect(() => {
+    onLoadingChange?.(isLoading);
+  }, [isLoading, onLoadingChange]);
 
   return (
     <div className="container mx-auto h-[calc(100vh-4rem)]">
       <MapContainer
         center={latitude && longitude ? [latitude, longitude] : DEFAULT_CENTER}
         zoom={DEFAULT_ZOOM}
-        className="w-full h-[calc(100vh-14.5rem)] z-0 rounded-sm"
+        className="w-full h-[calc(100vh-14.5rem)] z-0 rounded-sm [&.leaflet-container]:!bg-primary/10"
         zoomControl={false}
         attributionControl={false}
       >
