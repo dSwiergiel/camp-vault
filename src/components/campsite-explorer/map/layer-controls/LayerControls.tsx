@@ -106,7 +106,7 @@ const overlayLayers: OverlayLayer[] = [
     url: "https://basemap.nationalmap.gov/arcgis/rest/services/USGSHydroCached/MapServer/tile/{z}/{y}/{x}",
     maxZoom: 19,
     opacity: 1,
-    checked: false,
+    checked: true,
   },
   {
     name: "Terrain",

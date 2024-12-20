@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
-import type { Icon, DivIcon } from "leaflet";
+import type { DivIcon } from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { useUserCoordinates } from "@/lib/hooks/useUserCoordinates";
 import { renderToStaticMarkup } from "react-dom/server";
@@ -10,6 +10,7 @@ import UserLocationMarker from "./map-markers/UserLocationMarker";
 import { DEFAULT_CENTER, DEFAULT_ZOOM } from "@/lib/constants";
 import campsitesData from "@/campsite-data/NYS_campsite_data.json";
 import { Campsite } from "@/lib/models/campsite.model";
+import BasicCampsiteMarker from "./map-markers/BasicCampsiteMarker";
 
 // dynamically import all components since leaflet needs to be loaded in the browser
 const MapContainer = dynamic(
@@ -40,7 +41,7 @@ interface CampsiteMapProps {
 
 export default function CampsiteMap({ onLoadingChange }: CampsiteMapProps) {
   const [isMounted, setIsMounted] = useState(false);
-  const [icon, setIcon] = useState<Icon | undefined>(undefined);
+  const [icon, setIcon] = useState<DivIcon | undefined>(undefined);
   const [userIcon, setUserIcon] = useState<DivIcon | undefined>(undefined);
   const {
     latitude,
@@ -53,20 +54,29 @@ export default function CampsiteMap({ onLoadingChange }: CampsiteMapProps) {
   const isLoading = !isMounted || !icon || !userIcon || locationLoading;
 
   useEffect(() => {
-    import("leaflet").then(({ Icon, DivIcon }) => {
+    import("leaflet").then(({ DivIcon }) => {
       // campsite marker icon
+      // setIcon(
+      //   new Icon({
+      //     iconUrl:
+      //       "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
+      //     iconRetinaUrl:
+      //       "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
+      //     shadowUrl:
+      //       "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+      //     iconSize: [25, 41],
+      //     iconAnchor: [12, 41],
+      //     popupAnchor: [1, -34],
+      //     shadowSize: [41, 41],
+      //   })
+      // );
+
       setIcon(
-        new Icon({
-          iconUrl:
-            "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
-          iconRetinaUrl:
-            "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
-          shadowUrl:
-            "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
-          iconSize: [25, 41],
-          iconAnchor: [12, 41],
-          popupAnchor: [1, -34],
-          shadowSize: [41, 41],
+        new DivIcon({
+          html: renderToStaticMarkup(<BasicCampsiteMarker />),
+          className: "campsite-marker",
+          iconSize: [24, 24],
+          iconAnchor: [12, 12],
         })
       );
 
