@@ -1,7 +1,7 @@
 "use client";
 
-import { Suspense, useState } from "react";
-import CampsiteMap from "@/components/campsite-explorer/map/CampsiteMap";
+import { useState, Suspense } from "react";
+import CampsiteMapWrapper from "@/components/campsite-explorer/map/CampsiteMapWrapper";
 import CampsiteList from "@/components/campsite-explorer/list/CampsiteList";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -10,22 +10,20 @@ export default function Explore() {
 
   return (
     <div className="p-4">
-      <Suspense
-        fallback={
-          <div className="container mx-auto ">
-            <Skeleton className="h-[calc(100vh-11rem)] w-full rounded-sm bg-muted" />
-          </div>
-        }
-      >
-        {isMapLoading && (
-          <div className="container mx-auto ">
-            <Skeleton className="h-[calc(100vh-11rem)] w-full rounded-sm bg-muted" />
-          </div>
-        )}
-        <div className={isMapLoading ? "invisible" : "visible"}>
-          <CampsiteMap onLoadingChange={setIsMapLoading} />
+      {isMapLoading && (
+        <div className="container mx-auto ">
+          <Skeleton className="h-[calc(100vh-11rem)] w-full rounded-sm bg-muted" />
         </div>
-      </Suspense>
+      )}
+      <div className={isMapLoading ? "invisible" : "visible"}>
+        <Suspense
+          fallback={
+            <Skeleton className="h-[calc(100vh-11rem)] w-full rounded-sm bg-muted" />
+          }
+        >
+          <CampsiteMapWrapper onLoadingChange={setIsMapLoading} />
+        </Suspense>
+      </div>
       <CampsiteList />
     </div>
   );

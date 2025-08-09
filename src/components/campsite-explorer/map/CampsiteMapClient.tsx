@@ -8,7 +8,6 @@ import { useUserCoordinates } from "@/lib/hooks/useUserCoordinates";
 import { useClustering } from "@/lib/hooks/useClustering";
 import { DEFAULT_CENTER, DEFAULT_ZOOM } from "@/lib/constants";
 import { useSearchParams } from "next/navigation";
-import MapUrlSync from "./MapUrlSync";
 import campsitesData from "@/campsite-data/NYS_campsite_data.json";
 import { Campsite } from "@/lib/models/campsite.model";
 
@@ -34,13 +33,16 @@ const LayerControls = dynamic(() => import("./layer-controls/LayerControls"), {
 const ZoomControls = dynamic(() => import("./zoom-controls/ZoomControls"), {
   ssr: false,
 });
+const MapUrlSync = dynamic(() => import("./MapUrlSync"), {
+  ssr: false,
+});
 import { useMap } from "react-leaflet";
 
-interface CampsiteMapProps {
+interface CampsiteMapClientProps {
   onLoadingChange?: (isLoading: boolean) => void;
 }
 
-// helper functions to create icon HTML without SSR issues
+// helper functions to create icon HTML safely
 function createBasicCampsiteMarkerHTML(): string {
   return `
     <div class="relative">
@@ -81,23 +83,116 @@ function createClusterMarkerHTML(count: number): string {
   `;
 }
 
-export default function CampsiteMap({ onLoadingChange }: CampsiteMapProps) {
-  const [isClientReady, setIsClientReady] = useState(false);
-  const [isMounted, setIsMounted] = useState(false);
-  const [leafletLoaded, setLeafletLoaded] = useState(false);
-  const [icon, setIcon] = useState<DivIcon | null>(null);
-  const [clusterIcon, setClusterIcon] = useState<DivIcon | null>(null);
-  const [userIcon, setUserIcon] = useState<DivIcon | null>(null);
-  const [DivIconClass, setDivIconClass] = useState<typeof DivIcon | null>(null);
-  const mapRef = useRef<LeafletMap | null>(null);
-  const [mapInstance, setMapInstance] = useState<LeafletMap | null>(null);
+export default function CampsiteMapClient({
+  onLoadingChange,
+}: CampsiteMapClientProps) {
+  // wait for hydration
+  const [isHydrated, setIsHydrated] = useState(false);
+  const [leafletReady, setLeafletReady] = useState(false);
+  const [iconsReady, setIconsReady] = useState(false);
 
-  // ensure we're fully on the client side before doing anything
+  // leaflet state
+  const [DivIconClass, setDivIconClass] = useState<typeof DivIcon | null>(null);
+  const [basicIcon, setBasicIcon] = useState<DivIcon | null>(null);
+  const [userIcon, setUserIcon] = useState<DivIcon | null>(null);
+  const [defaultClusterIcon, setDefaultClusterIcon] = useState<DivIcon | null>(
+    null
+  );
+
+  // map state
+  const [mapInstance, setMapInstance] = useState<LeafletMap | null>(null);
+  const [campsites, setCampsites] = useState<Campsite[]>([]);
+  const mapRef = useRef<LeafletMap | null>(null);
+
+  // hydration check
   useEffect(() => {
-    setIsClientReady(true);
+    setIsHydrated(true);
   }, []);
 
-  // bridge to capture the map instance once MapContainer mounts
+  // leaflet loading
+  useEffect(() => {
+    if (!isHydrated) return;
+
+    let mounted = true;
+
+    import("leaflet")
+      .then(({ DivIcon }) => {
+        if (!mounted) return;
+
+        setDivIconClass(DivIcon);
+        setLeafletReady(true);
+
+        // create icons
+        try {
+          const basicIconInstance = new DivIcon({
+            html: createBasicCampsiteMarkerHTML(),
+            className: "campsite-marker",
+            iconSize: [28, 28] as [number, number],
+            iconAnchor: [14, 28] as [number, number],
+          });
+
+          const userIconInstance = new DivIcon({
+            html: createUserLocationMarkerHTML(),
+            className: "user-location-marker",
+            iconSize: [24, 24] as [number, number],
+            iconAnchor: [12, 12] as [number, number],
+          });
+
+          const clusterIconInstance = new DivIcon({
+            html: createClusterMarkerHTML(0),
+            className: "cluster-marker",
+            iconSize: [32, 32] as [number, number],
+            iconAnchor: [16, 16] as [number, number],
+          });
+
+          setBasicIcon(basicIconInstance);
+          setUserIcon(userIconInstance);
+          setDefaultClusterIcon(clusterIconInstance);
+          setIconsReady(true);
+
+          // load campsite data
+          setCampsites(campsitesData as Campsite[]);
+        } catch (error) {
+          console.error("Error creating icons:", error);
+        }
+      })
+      .catch((error) => {
+        console.error("Error loading Leaflet:", error);
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, [isHydrated]);
+
+  const {
+    latitude,
+    longitude,
+    isLoading: locationLoading,
+    requestLocation,
+  } = useUserCoordinates();
+  const searchParams = useSearchParams();
+
+  // url params
+  const urlLat = searchParams?.get("lat");
+  const urlLng = searchParams?.get("lng");
+  const urlZ = searchParams?.get("z") ?? searchParams?.get("zoom");
+  const parsedLat = urlLat ? Number(urlLat) : undefined;
+  const parsedLng = urlLng ? Number(urlLng) : undefined;
+  const parsedZoom = urlZ ? Number(urlZ) : undefined;
+
+  // clustering
+  const {
+    clusters,
+    singleMarkers,
+    isLoading: clusteringLoading,
+    handleClusterClick,
+  } = useClustering({
+    campsites: iconsReady ? campsites : [],
+    map: mapInstance,
+  });
+
+  // map instance bridge
   function MapInstanceBridge({
     onReady,
   }: {
@@ -111,138 +206,34 @@ export default function CampsiteMap({ onLoadingChange }: CampsiteMapProps) {
     return null;
   }
 
-  const {
-    latitude,
-    longitude,
-    isLoading: locationLoading,
-    requestLocation,
-  } = useUserCoordinates();
-  const [campsites, setCampsites] = useState<Campsite[]>([]);
-  const searchParams = useSearchParams();
+  // request location
+  useEffect(() => {
+    if (isHydrated && leafletReady) {
+      requestLocation();
+    }
+  }, [isHydrated, leafletReady, requestLocation]);
 
-  // derive initial center and zoom from url if present (only if client ready)
-  const urlLat = isClientReady ? searchParams?.get("lat") : null;
-  const urlLng = isClientReady ? searchParams?.get("lng") : null;
-  // prefer canonical "z"; if only legacy "zoom" exists we'll normalize it later
-  const urlZ = isClientReady
-    ? searchParams?.get("z") ?? searchParams?.get("zoom")
-    : null;
-  const parsedLat = urlLat ? Number(urlLat) : undefined;
-  const parsedLng = urlLng ? Number(urlLng) : undefined;
-  const parsedZoom = urlZ ? Number(urlZ) : undefined;
-
-  // clustering logic (only run when everything is ready)
-  const {
-    clusters,
-    singleMarkers,
-    isLoading: clusteringLoading,
-    handleClusterClick,
-  } = useClustering({
-    campsites: isClientReady ? campsites : [],
-    map: isClientReady ? mapInstance : null,
-  });
-
+  // loading state
   const isLoading =
-    !isClientReady ||
-    !isMounted ||
-    !leafletLoaded ||
-    !icon ||
-    !clusterIcon ||
-    !userIcon ||
-    !DivIconClass ||
+    !isHydrated ||
+    !leafletReady ||
+    !iconsReady ||
     locationLoading ||
     clusteringLoading;
 
-  useEffect(() => {
-    // ensure we're on the client side and client is ready
-    if (typeof window === "undefined" || !isClientReady) return;
-
-    import("leaflet")
-      .then(({ DivIcon }) => {
-        setLeafletLoaded(true);
-        // store the DivIcon class for later use
-        setDivIconClass(DivIcon);
-
-        try {
-          // campsite marker icon
-          setIcon(
-            new DivIcon({
-              html: createBasicCampsiteMarkerHTML(),
-              className: "campsite-marker",
-              iconSize: [28, 28] as [number, number],
-              iconAnchor: [14, 28] as [number, number],
-            })
-          );
-
-          // user location marker using DivIcon
-          setUserIcon(
-            new DivIcon({
-              html: createUserLocationMarkerHTML(),
-              className: "user-location-marker",
-              iconSize: [24, 24] as [number, number],
-              iconAnchor: [12, 12] as [number, number],
-            })
-          );
-
-          // placeholder cluster icon (will be replaced with dynamic icons)
-          setClusterIcon(
-            new DivIcon({
-              html: createClusterMarkerHTML(0),
-              className: "cluster-marker",
-              iconSize: [32, 32] as [number, number],
-              iconAnchor: [16, 16] as [number, number],
-            })
-          );
-
-          setIsMounted(true);
-        } catch (error) {
-          console.error("Error creating Leaflet icons:", error);
-        }
-      })
-      .catch((error) => {
-        console.error("Error loading Leaflet:", error);
-      });
-  }, [isClientReady]);
-
-  useEffect(() => {
-    if (isClientReady) {
-      requestLocation();
-    }
-  }, [isClientReady, requestLocation]);
-
-  // load campsite data only after everything is ready
-  useEffect(() => {
-    if (
-      isClientReady &&
-      isMounted &&
-      leafletLoaded &&
-      icon &&
-      clusterIcon &&
-      userIcon
-    ) {
-      setCampsites(campsitesData as Campsite[]);
-    }
-  }, [isClientReady, isMounted, leafletLoaded, icon, clusterIcon, userIcon]);
-
+  // loading change callback
   useEffect(() => {
     onLoadingChange?.(isLoading);
   }, [isLoading, onLoadingChange]);
 
-  // create dynamic cluster icon based on count
+  // create dynamic cluster icon
   const createClusterIcon = (count: number): DivIcon | null => {
-    if (
-      !isClientReady ||
-      !isMounted ||
-      !leafletLoaded ||
-      !DivIconClass ||
-      typeof window === "undefined"
-    ) {
-      return clusterIcon;
+    if (!DivIconClass || !isHydrated || !leafletReady) {
+      return defaultClusterIcon;
     }
 
-    // use the stored DivIcon class that was imported in the effect
     try {
-      const iconOptions = {
+      return new DivIconClass({
         html: createClusterMarkerHTML(count),
         className: "cluster-marker",
         iconSize: (count >= 50
@@ -255,40 +246,15 @@ export default function CampsiteMap({ onLoadingChange }: CampsiteMapProps) {
           : count >= 10
           ? [20, 20]
           : [16, 16]) as [number, number],
-      };
-
-      // validate that all required options are defined
-      if (
-        !iconOptions.html ||
-        !iconOptions.className ||
-        !iconOptions.iconSize ||
-        !iconOptions.iconAnchor
-      ) {
-        console.warn(
-          "Invalid icon options, falling back to default cluster icon"
-        );
-        return clusterIcon;
-      }
-
-      return new DivIconClass(iconOptions);
+      });
     } catch (error) {
-      console.error("Error creating dynamic cluster icon:", error);
-      // fallback to default cluster icon if creation fails
-      return clusterIcon;
+      console.error("Error creating cluster icon:", error);
+      return defaultClusterIcon;
     }
   };
 
-  // don't render map until everything is loaded and we're on client side
-  if (
-    !isClientReady ||
-    !isMounted ||
-    !leafletLoaded ||
-    !icon ||
-    !clusterIcon ||
-    !userIcon ||
-    !DivIconClass ||
-    typeof window === "undefined"
-  ) {
+  // don't render until everything is ready
+  if (!isHydrated || !leafletReady || !iconsReady) {
     return (
       <div className="container mx-auto h-[calc(100vh-4rem)]">
         <div className="w-full h-[calc(100vh-11rem)] bg-primary/10 rounded-sm flex items-center justify-center">
@@ -343,14 +309,13 @@ export default function CampsiteMap({ onLoadingChange }: CampsiteMapProps) {
 
         {/* cluster markers */}
         {clusters.map((cluster, index) => {
-          const clusterIconForCount = createClusterIcon(cluster.count);
-          // only render if we have a valid icon
-          if (!clusterIconForCount) return null;
+          const clusterIcon = createClusterIcon(cluster.count);
+          if (!clusterIcon) return null;
 
           return (
             <Marker
               key={`cluster-${index}`}
-              icon={clusterIconForCount}
+              icon={clusterIcon}
               position={[cluster.lat, cluster.lng]}
               eventHandlers={{
                 click: () => handleClusterClick(cluster),
@@ -392,13 +357,12 @@ export default function CampsiteMap({ onLoadingChange }: CampsiteMapProps) {
 
         {/* individual campsite markers */}
         {singleMarkers.map((campsite, index) => {
-          // only render if we have a valid icon
-          if (!icon) return null;
+          if (!basicIcon) return null;
 
           return (
             <Marker
               key={`single-${index}`}
-              icon={icon}
+              icon={basicIcon}
               position={[
                 campsite.coordinates.latitude,
                 campsite.coordinates.longitude,

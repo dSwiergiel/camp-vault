@@ -23,6 +23,11 @@ interface UseClusteringProps {
   clusterRadius?: number;
 }
 
+interface ClusteringResult {
+  clusters: Cluster[];
+  singleMarkers: Campsite[];
+}
+
 interface UseClusteringReturn {
   clusters: Cluster[];
   singleMarkers: Campsite[];
@@ -45,9 +50,7 @@ export function useClustering({
   const [zoom, setZoom] = useState<number>(10);
   const [bounds, setBounds] = useState<MapBounds | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const cacheRef = useRef(
-    new ClusterCache<{ clusters: Cluster[]; singleMarkers: Campsite[] }>()
-  );
+  const cacheRef = useRef(new ClusterCache<ClusteringResult>());
 
   // calculate clusters based on current zoom level with caching
   const { clusters: allClusters, singleMarkers: allSingleMarkers } =
@@ -78,8 +81,8 @@ export function useClustering({
     return filterVisibleItems(allClusters, allSingleMarkers, bounds);
   }, [allClusters, allSingleMarkers, bounds]);
 
-  // update zoom and bounds when map changes (throttled for performance)
-  const updateMapStateFn = useCallback(() => {
+  // create throttled update function with proper dependencies
+  const updateMapState = useCallback(() => {
     if (!map) return;
 
     const currentZoom = map.getZoom();
@@ -94,10 +97,37 @@ export function useClustering({
     });
   }, [map]);
 
-  const updateMapState = useMemo(
-    () => throttle(updateMapStateFn, 100),
-    [updateMapStateFn]
+  // throttled version for performance using useRef to avoid dependencies issues
+  const throttledUpdateMapStateRef = useRef(
+    throttle(() => {
+      if (!map) return;
+      const currentZoom = map.getZoom();
+      const currentBounds = map.getBounds();
+      setZoom(currentZoom);
+      setBounds({
+        north: currentBounds.getNorth(),
+        south: currentBounds.getSouth(),
+        east: currentBounds.getEast(),
+        west: currentBounds.getWest(),
+      });
+    }, 100)
   );
+
+  // update the throttled function when map changes
+  useEffect(() => {
+    throttledUpdateMapStateRef.current = throttle(() => {
+      if (!map) return;
+      const currentZoom = map.getZoom();
+      const currentBounds = map.getBounds();
+      setZoom(currentZoom);
+      setBounds({
+        north: currentBounds.getNorth(),
+        south: currentBounds.getSouth(),
+        east: currentBounds.getEast(),
+        west: currentBounds.getWest(),
+      });
+    }, 100);
+  }, [map]);
 
   // set up map event listeners
   useEffect(() => {
@@ -106,9 +136,9 @@ export function useClustering({
     // initial state
     updateMapState();
 
-    // listen for zoom and move events
-    const handleZoomEnd = () => updateMapState();
-    const handleMoveEnd = () => updateMapState();
+    // listen for zoom and move events (throttled for performance)
+    const handleZoomEnd = () => throttledUpdateMapStateRef.current();
+    const handleMoveEnd = () => throttledUpdateMapStateRef.current();
 
     map.on("zoomend", handleZoomEnd);
     map.on("moveend", handleMoveEnd);

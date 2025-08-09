@@ -7,17 +7,14 @@ export function throttle<T extends (...args: unknown[]) => void>(
   func: T,
   limit: number
 ): T {
-  let inThrottle = false;
-  const throttled = ((...args: Parameters<T>) => {
+  let inThrottle: boolean;
+  return ((...args: Parameters<T>) => {
     if (!inThrottle) {
       func(...args);
       inThrottle = true;
-      setTimeout(() => {
-        inThrottle = false;
-      }, limit);
+      setTimeout(() => (inThrottle = false), limit);
     }
   }) as T;
-  return throttled;
 }
 
 // debounce function to delay clustering until user stops interacting
@@ -25,12 +22,11 @@ export function debounce<T extends (...args: unknown[]) => void>(
   func: T,
   delay: number
 ): T {
-  let timeoutId: ReturnType<typeof setTimeout> | undefined;
-  const debounced = ((...args: Parameters<T>) => {
-    if (timeoutId) clearTimeout(timeoutId);
+  let timeoutId: NodeJS.Timeout;
+  return ((...args: Parameters<T>) => {
+    clearTimeout(timeoutId);
     timeoutId = setTimeout(() => func(...args), delay);
   }) as T;
-  return debounced;
 }
 
 // memory optimization - limit the number of items processed at once
@@ -42,6 +38,14 @@ export function chunkArray<T>(array: T[], chunkSize: number): T[][] {
   return chunks;
 }
 
+// define bounds type for cache
+interface CacheBounds {
+  north: number;
+  south: number;
+  east: number;
+  west: number;
+}
+
 // cache for clustering results to avoid recalculation
 export class ClusterCache<T = unknown> {
   private cache = new Map<string, T>();
@@ -51,7 +55,7 @@ export class ClusterCache<T = unknown> {
   private createKey(
     zoom: number,
     dataLength: number,
-    bounds?: { north: number; south: number; east: number; west: number }
+    bounds?: CacheBounds
   ): string {
     const boundsStr = bounds
       ? `${bounds.north.toFixed(2)},${bounds.south.toFixed(
@@ -61,27 +65,18 @@ export class ClusterCache<T = unknown> {
     return `${zoom}-${dataLength}-${boundsStr}`;
   }
 
-  get(
-    zoom: number,
-    dataLength: number,
-    bounds?: { north: number; south: number; east: number; west: number }
-  ): T | undefined {
+  get(zoom: number, dataLength: number, bounds?: CacheBounds): T | undefined {
     return this.cache.get(this.createKey(zoom, dataLength, bounds));
   }
 
-  set(
-    zoom: number,
-    dataLength: number,
-    result: T,
-    bounds?: { north: number; south: number; east: number; west: number }
-  ): void {
+  set(zoom: number, dataLength: number, result: T, bounds?: CacheBounds): void {
     const key = this.createKey(zoom, dataLength, bounds);
 
     // remove oldest entries if cache is too large
     if (this.cache.size >= this.maxSize) {
-      const firstKeyResult = this.cache.keys().next();
-      if (!firstKeyResult.done) {
-        this.cache.delete(firstKeyResult.value);
+      const firstKey = this.cache.keys().next().value;
+      if (firstKey !== undefined) {
+        this.cache.delete(firstKey);
       }
     }
 
