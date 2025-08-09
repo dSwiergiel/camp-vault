@@ -51,6 +51,9 @@ export default function CampsiteMap({ onLoadingChange }: CampsiteMapProps) {
     undefined
   );
   const [userIcon, setUserIcon] = useState<DivIcon | undefined>(undefined);
+  const [DivIconCtor, setDivIconCtor] = useState<
+    typeof import("leaflet").DivIcon | null
+  >(null);
   const mapRef = useRef<LeafletMap | null>(null);
   const [mapInstance, setMapInstance] = useState<LeafletMap | null>(null);
 
@@ -107,6 +110,7 @@ export default function CampsiteMap({ onLoadingChange }: CampsiteMapProps) {
 
   useEffect(() => {
     import("leaflet").then(({ DivIcon }) => {
+      setDivIconCtor(DivIcon);
       // campsite marker icon
       setIcon(
         new DivIcon({
@@ -152,22 +156,13 @@ export default function CampsiteMap({ onLoadingChange }: CampsiteMapProps) {
 
   // create dynamic cluster icon based on count
   const createClusterIcon = (count: number): DivIcon | undefined => {
-    if (!isMounted || !clusterIcon) return clusterIcon;
-
-    // create a new DivIcon with the specific count
-    try {
-      // we need to dynamically import here to avoid SSR issues
-      const { DivIcon } = require("leaflet");
-      return new DivIcon({
-        html: renderToStaticMarkup(<ClusterMarker count={count} />),
-        className: "cluster-marker",
-        iconSize: count >= 50 ? [48, 48] : count >= 10 ? [40, 40] : [32, 32],
-        iconAnchor: count >= 50 ? [24, 24] : count >= 10 ? [20, 20] : [16, 16],
-      });
-    } catch {
-      // fallback to default cluster icon if import fails
-      return clusterIcon;
-    }
+    if (!isMounted || !clusterIcon || !DivIconCtor) return clusterIcon;
+    return new DivIconCtor({
+      html: renderToStaticMarkup(<ClusterMarker count={count} />),
+      className: "cluster-marker",
+      iconSize: count >= 50 ? [48, 48] : count >= 10 ? [40, 40] : [32, 32],
+      iconAnchor: count >= 50 ? [24, 24] : count >= 10 ? [20, 20] : [16, 16],
+    });
   };
 
   return (
