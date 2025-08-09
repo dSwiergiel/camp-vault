@@ -45,7 +45,9 @@ export function useClustering({
   const [zoom, setZoom] = useState<number>(10);
   const [bounds, setBounds] = useState<MapBounds | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const cacheRef = useRef(new ClusterCache());
+  const cacheRef = useRef(
+    new ClusterCache<{ clusters: Cluster[]; singleMarkers: Campsite[] }>()
+  );
 
   // calculate clusters based on current zoom level with caching
   const { clusters: allClusters, singleMarkers: allSingleMarkers } =
@@ -53,9 +55,6 @@ export function useClustering({
       if (campsites.length === 0) return { clusters: [], singleMarkers: [] };
 
       // check cache first
-      const cacheKey = `${zoom}-${campsites.length}-${
-        clusterRadius || "default"
-      }`;
       const cached = cacheRef.current.get(zoom, campsites.length);
       if (cached) {
         return cached;
@@ -80,22 +79,24 @@ export function useClustering({
   }, [allClusters, allSingleMarkers, bounds]);
 
   // update zoom and bounds when map changes (throttled for performance)
-  const updateMapState = useCallback(
-    throttle(() => {
-      if (!map) return;
+  const updateMapStateFn = useCallback(() => {
+    if (!map) return;
 
-      const currentZoom = map.getZoom();
-      const currentBounds = map.getBounds();
+    const currentZoom = map.getZoom();
+    const currentBounds = map.getBounds();
 
-      setZoom(currentZoom);
-      setBounds({
-        north: currentBounds.getNorth(),
-        south: currentBounds.getSouth(),
-        east: currentBounds.getEast(),
-        west: currentBounds.getWest(),
-      });
-    }, 100), // throttle to 100ms to prevent excessive recalculation
-    [map]
+    setZoom(currentZoom);
+    setBounds({
+      north: currentBounds.getNorth(),
+      south: currentBounds.getSouth(),
+      east: currentBounds.getEast(),
+      west: currentBounds.getWest(),
+    });
+  }, [map]);
+
+  const updateMapState = useMemo(
+    () => throttle(updateMapStateFn, 100),
+    [updateMapStateFn]
   );
 
   // set up map event listeners
