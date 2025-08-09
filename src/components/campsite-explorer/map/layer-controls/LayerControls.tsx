@@ -12,8 +12,8 @@ import {
   DropdownMenuCheckboxItem,
 } from "@/components/ui/dropdown-menu";
 import { Layers } from "lucide-react";
-import { useState } from "react";
-import { TileLayer, LayerGroup } from "react-leaflet";
+import { useEffect, useState } from "react";
+import { TileLayer, LayerGroup, useMap } from "react-leaflet";
 
 interface BaseLayer {
   name: string;
@@ -76,7 +76,8 @@ const baseLayers: BaseLayer[] = [
       {
         url: "https://caltopo.com/tile/mb_topo/{z}/{x}/{y}.png",
         maxZoom: 19,
-        minZoom: 16,
+        // note: do not use minZoom to avoid clamping the overall map zoom
+        // we toggle visibility by opacity based on current map zoom instead
         opacity: 0.7,
       },
       // terrain
@@ -125,11 +126,24 @@ const overlayLayers: OverlayLayer[] = [
 ];
 
 export default function LayerControls() {
+  const map = useMap();
+  const [currentZoom, setCurrentZoom] = useState<number>(map.getZoom());
   const [baseLayer, setBaseLayer] = useState("Hybrid");
   const [enabledOverlays, setEnabledOverlays] = useState<string[]>(
     overlayLayers.filter((layer) => layer.checked).map((layer) => layer.name)
   );
   const [isOpen, setIsOpen] = useState(false);
+
+  // keep track of current zoom to conditionally show trails layer at z>=16
+  useEffect(() => {
+    const handleZoomChange = () => setCurrentZoom(map.getZoom());
+    map.on("zoomend", handleZoomChange);
+    // initialize
+    handleZoomChange();
+    return () => {
+      map.off("zoomend", handleZoomChange);
+    };
+  }, [map]);
 
   const handleBaseLayerChange = (value: string) => {
     setBaseLayer(value);
@@ -153,9 +167,16 @@ export default function LayerControls() {
               key={`${baseLayerGroup.name}-${index}`}
               url={layer.url}
               maxZoom={layer.maxZoom}
-              minZoom={layer.minZoom}
+              // avoid passing minZoom to prevent map-level clamping
               opacity={
-                baseLayer === baseLayerGroup.name ? layer.opacity ?? 1 : 0
+                baseLayer === baseLayerGroup.name
+                  ? // hide trails under z<16 for hybrid base without clamping
+                    layer.url.includes("caltopo.com/tile/mb_topo/") &&
+                    baseLayerGroup.name === "Hybrid" &&
+                    currentZoom < 16
+                    ? 0
+                    : layer.opacity ?? 1
+                  : 0
               }
             />
           ))}

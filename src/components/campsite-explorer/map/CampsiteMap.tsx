@@ -10,6 +10,8 @@ import { renderToStaticMarkup } from "react-dom/server";
 import UserLocationMarker from "./map-markers/UserLocationMarker";
 import ClusterMarker from "./map-markers/ClusterMarker";
 import { DEFAULT_CENTER, DEFAULT_ZOOM } from "@/lib/constants";
+import { useSearchParams } from "next/navigation";
+import MapUrlSync from "./MapUrlSync";
 import campsitesData from "@/campsite-data/NYS_campsite_data.json";
 import { Campsite } from "@/lib/models/campsite.model";
 import BasicCampsiteMarker from "./map-markers/BasicCampsiteMarker";
@@ -36,6 +38,7 @@ const LayerControls = dynamic(() => import("./layer-controls/LayerControls"), {
 const ZoomControls = dynamic(() => import("./zoom-controls/ZoomControls"), {
   ssr: false,
 });
+import { useMap } from "react-leaflet";
 
 interface CampsiteMapProps {
   onLoadingChange?: (isLoading: boolean) => void;
@@ -49,6 +52,21 @@ export default function CampsiteMap({ onLoadingChange }: CampsiteMapProps) {
   );
   const [userIcon, setUserIcon] = useState<DivIcon | undefined>(undefined);
   const mapRef = useRef<LeafletMap | null>(null);
+  const [mapInstance, setMapInstance] = useState<LeafletMap | null>(null);
+
+  // bridge to capture the map instance once MapContainer mounts
+  function MapInstanceBridge({
+    onReady,
+  }: {
+    onReady: (map: LeafletMap) => void;
+  }) {
+    const map = useMap();
+    useEffect(() => {
+      onReady(map);
+      mapRef.current = map;
+    }, [map, onReady]);
+    return null;
+  }
 
   const {
     latitude,
@@ -57,6 +75,16 @@ export default function CampsiteMap({ onLoadingChange }: CampsiteMapProps) {
     requestLocation,
   } = useUserCoordinates();
   const [campsites, setCampsites] = useState<Campsite[]>([]);
+  const searchParams = useSearchParams();
+
+  // derive initial center and zoom from url if present
+  const urlLat = searchParams?.get("lat");
+  const urlLng = searchParams?.get("lng");
+  // prefer canonical "z"; if only legacy "zoom" exists we'll normalize it later
+  const urlZ = searchParams?.get("z") ?? searchParams?.get("zoom");
+  const parsedLat = urlLat ? Number(urlLat) : undefined;
+  const parsedLng = urlLng ? Number(urlLng) : undefined;
+  const parsedZoom = urlZ ? Number(urlZ) : undefined;
 
   // clustering logic
   const {
@@ -66,7 +94,7 @@ export default function CampsiteMap({ onLoadingChange }: CampsiteMapProps) {
     handleClusterClick,
   } = useClustering({
     campsites,
-    map: mapRef.current,
+    map: mapInstance,
   });
 
   const isLoading =
@@ -145,13 +173,28 @@ export default function CampsiteMap({ onLoadingChange }: CampsiteMapProps) {
   return (
     <div className="container mx-auto h-[calc(100vh-4rem)]">
       <MapContainer
-        center={latitude && longitude ? [latitude, longitude] : DEFAULT_CENTER}
-        zoom={DEFAULT_ZOOM}
+        center={
+          parsedLat != null &&
+          !Number.isNaN(parsedLat) &&
+          parsedLng != null &&
+          !Number.isNaN(parsedLng)
+            ? [parsedLat, parsedLng]
+            : latitude && longitude
+            ? [latitude, longitude]
+            : DEFAULT_CENTER
+        }
+        zoom={
+          parsedZoom != null && !Number.isNaN(parsedZoom)
+            ? Math.max(0, Math.min(22, Math.round(parsedZoom)))
+            : DEFAULT_ZOOM
+        }
         className="w-full h-[calc(100vh-11rem)] z-0 rounded-sm [&.leaflet-container]:!bg-primary/10"
         zoomControl={false}
         attributionControl={false}
         ref={mapRef}
       >
+        <MapInstanceBridge onReady={setMapInstance} />
+        <MapUrlSync />
         <AttributionControl
           position="bottomleft"
           prefix='<a href="/explore/map-providers">Map Data Providers</a>'
